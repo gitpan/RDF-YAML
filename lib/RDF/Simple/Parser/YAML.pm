@@ -1,5 +1,5 @@
 # $File: //member/autrijus/RDF-YAML/lib/RDF/Simple/Parser/YAML.pm $ $Author: autrijus $
-# $Revision: #1 $ $Change: 8523 $ $DateTime: 2003/10/22 04:14:34 $
+# $Revision: #2 $ $Change: 8524 $ $DateTime: 2003/10/22 05:20:04 $
 
 package RDF::Simple::Parser::YAML;
 $RDF::Simple::Parser::YAML::VERSION = '0.01';
@@ -21,10 +21,10 @@ RDF in YAML, and returns an array of RDF triples.
 
     my $uri = 'http://www.w3.org/2000/08/w3c-synd/home.rss';
     my $rdf = LWP::Simple::get($uri);
- 
+
     my $parser = RDF::Simple::Parser::YAML->new(base => $uri)
     my @triples = $parser->parse_rdf($rdf);
-    
+
     # returns an array of array references which are triples
 
 =head1 METHODS 
@@ -35,7 +35,7 @@ Create a new RDF::Simple::Parser::YAML object.
 
 The optional parameter C<base> supplies a base URI for relative URIs found
 in the document.  (This function is currently unimplemented.)
-    
+
 =head2 parse_rdf($rdf)
 
 Accepts a string which is an RDF/YAML document.

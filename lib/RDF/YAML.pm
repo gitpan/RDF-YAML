@@ -1,8 +1,8 @@
 # $File: //member/autrijus/RDF-YAML/lib/RDF/YAML.pm $ $Author: autrijus $
-# $Revision: #1 $ $Change: 8523 $ $DateTime: 2003/10/22 04:14:34 $
+# $Revision: #2 $ $Change: 8524 $ $DateTime: 2003/10/22 05:20:04 $
 
 package RDF::YAML;
-$RDF::YAML::VERSION = '0.1';
+$RDF::YAML::VERSION = '0.11';
 
 use strict;
 
@@ -12,7 +12,7 @@ RDF::YAML - RDF YAML parser and dumper
 
 =head1 VERSION
 
-This document describes version 0.01 of RDF::YAML, released October 22,
+This document describes version 0.11 of RDF::YAML, released October 22,
 2003.
 
 =head1 SYNOPSIS
@@ -21,9 +21,13 @@ This document describes version 0.01 of RDF::YAML, released October 22,
     $rdf = RDF::YAML->new;
     $triples = $rdf->parse_file("input.yml");
 
+    # Declare namespaces
+    my %namespaces = ( 'rss' => 'http://purl.org/rss/1.0/' );
+    $rdf->set_namespaces( \%namespaces );
+
     # Translate RDF/XML to RDF/YAML
-    my $triples = RDF::Simple::Parser->new->parse_rdf($xml_string);
-    $rdf->set_triples($triples);
+    my @triples = RDF::Simple::Parser->new->parse_rdf($xml_string);
+    $rdf->set_triples(\@triples);
     $rdf->dump_file("output.yml");
 
     # Add new triples to a RDF/YAML string
@@ -51,14 +55,19 @@ Constructor.  Currently takes no parameters.
 
 sub new {
     my $class = shift;
-    bless({ triples => [] }, $class);
+    bless({
+	triples	    => [],
+	parser	    => undef,
+	serialiser  => undef,
+    }, $class);
 }
 
 =head2 parse_file($file)
 
 Parses a RDF/YAML file specified by $file.  Returns an array reference
 to parsed triples, in the standard C<[ $subject, $predicate, $object ]>
-format.  This also replaces all previous triples stored within the object.
+format.  This also replaces all triples and namespaces stored within
+the object.
 
 =head2 parse_string($string)
 
@@ -79,7 +88,7 @@ sub parse_file {
 sub parse_string {
     my $self = shift;
     $self->set_triples( [ $self->_parser->new->parse_rdf(@_) ] );
-    $self->add_ns( %{$self->_parser->ns || {}} );
+    $self->set_ns( $self->_parser->ns );
     return $self->get_triples;
 }
 
@@ -105,20 +114,20 @@ sub dump_file {
 sub dump_string {
     my $self = shift;
     require RDF::Simple::Serialiser::YAML;
-    $self->_serialiser->serialise($self->get_triples || []);
+    $self->_serialiser->serialise(@{$self->get_triples || []});
 }
 
 =head2 get_triples()
 
 Returns a reference to array of triples currently stored in this object.
 
-=head2 set_triples($triples)
+=head2 set_triples(\@triples)
 
 Takes a reference to array of triples and stores it in the object,
 replacing previous ones.  If invoked with no arguments, clears the
 stored triples.
 
-=head2 add_triples($triples)
+=head2 add_triples(\@triples)
 
 Similar to C<set_triples>, but adds to currently stored triples instead
 of replacing them.
@@ -133,11 +142,18 @@ sub add_triples { push @{$_[0]->get_triples}, @{$_[1] || []} }
 
 Returns a hash reference of namespaces currently in use.
 
-=head2 add_ns( $qname => $uri, $qname2 => $uri2 ... )
+Default namespaces are the same as listed in L<RDF::Simple::Serialiser>.
 
-Add new namespaces to the RDF document.  Default ones are the same as
-supported in L<RDF::Simple::NS>, and new ones are accumulated from each
-parsed file or string.
+=head2 set_ns(\%namespaces)
+
+Takes a hash reference to namespaces expressed as C<$qname =E<gt> $uri>
+pairs, and adds them to subsequent RDF/YAML documents.  This overrides
+(but does not clear) the default ones.
+
+=head2 add_ns(\%namespaces)
+
+Similar to C<set_ns>, but adds to currently stored namespaces instead
+of replacing them.
 
 =cut
 
@@ -146,9 +162,15 @@ sub get_ns {
     return { $self->_serialiser->ns->lookup };
 }
 
+sub set_ns {
+    my $self = shift;
+    delete $self->_serialiser->ns->{_lookup};
+    return $self->add_ns(@_);
+}
+
 sub add_ns {
     my $self = shift;
-    $self->_serialiser->addns(@_);
+    return { $self->_serialiser->addns(%{$_[0]||{}}) };
 }
 
 # Internal methods
@@ -171,7 +193,7 @@ sub _serialiser {
 
 L<RDF::Simple::Parser::YAML>, L<RDF::Simple::Serialiser::YAML>
 
-L<RDF::Simple>, L<RDF::Notation3>
+L<YAML>, L<RDF::Simple>, L<RDF::Notation3>
 
 =head1 AUTHORS
 

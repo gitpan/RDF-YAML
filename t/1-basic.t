@@ -1,10 +1,10 @@
 # $File: //member/autrijus/RDF-YAML/t/1-basic.t $ $Author: autrijus $
-# $Revision: #1 $ $Change: 8523 $ $DateTime: 2003/10/22 04:14:34 $
+# $Revision: #2 $ $Change: 8524 $ $DateTime: 2003/10/22 05:20:04 $
 
 use strict;
 use FindBin;
 use File::Spec;
-use Test::More tests => 6;
+use Test::More tests => 9;
 
 # XXX - this test suite badly needs a rewrite.
 
@@ -15,14 +15,18 @@ isa_ok($obj, 'RDF::YAML');
 
 my $sample = File::Spec->catfile($FindBin::Bin, 'sample.yml');
 
-is( ref( $obj->parse_file($sample) ), 'ARRAY', 'parse_file' );
-is( ref( $obj->get_ns ), 'HASH', 'get_ns' );
+isa_ok( $obj->parse_file($sample), 'ARRAY', 'parse_file' );
+isa_ok( $obj->get_ns, 'HASH', 'get_ns' );
 
 use_ok('RDF::Simple::Parser');
 
-$obj->add_ns( 'rss' => 'http://purl.org/rss/1.0/' );
-$obj->set_triples( RDF::Simple::Parser->new->parse_rdf(join '', <DATA>) );
-isnt($obj->dump_string, '', 'dump_string');
+my %namespaces = ( 'rss' => 'http://purl.org/rss/1.0/' );
+isa_ok( $obj->add_ns( \%namespaces ), 'HASH', 'add_ns' );
+is( $obj->get_ns->{rss}, 'http://purl.org/rss/1.0/', 'add_ns works' );
+
+my @triples = RDF::Simple::Parser->new->parse_rdf(join '', <DATA>);
+isa_ok( $obj->set_triples( \@triples ), 'ARRAY', 'set_triples' );
+ok($obj->dump_string, 'dump_string works');
 
 __DATA__
 <?xml version="1.0" encoding="UTF-8"?>
