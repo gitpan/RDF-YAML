@@ -1,0 +1,12 @@
+____________________________________________________________________________
+[  8523] By: autrijus                              on 2003/10/22  04:14:34
+        Log: * This be RDF::YAML 0.01, initial CPAN release.
+	   + MANIFEST Makefile.PL README
+	   + lib/RDF/Simple/Parser/YAML.pm
+	   + lib/RDF/Simple/Serialiser/YAML.pm
+	   + lib/RDF/YAML.pm t/0-signature.t t/1-basic.t
+	   + t/sample.yml
+____________________________________________________________________________
+[  8492] By: autrijus                              on 2003/10/19  15:23:09
+        Log: * sample.
+	   + sample.yml
